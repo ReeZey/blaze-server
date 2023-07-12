@@ -1,5 +1,7 @@
+use super::varint;
+
 use tokio::{net::TcpStream, io::{AsyncReadExt, AsyncWriteExt}};
-use crate::varint::{read_varint, write_varint, varint_length};
+use varint::{read_varint, write_varint, varint_length};
 use std::io::Error;
 
 #[derive(Debug)]
@@ -28,14 +30,11 @@ pub async fn read_packet(mut stream: &mut TcpStream) -> Result<Packet, Error> {
 
 pub async fn write_packet(stream: &mut TcpStream, packet: Packet) -> Result<(), Error> {
     let mut data_buffer: Vec<u8> = vec![];
+    write_varint(&mut data_buffer, varint_length(packet.packet_id) + packet.data.len() as u32);
     write_varint(&mut data_buffer, packet.packet_id);
     data_buffer.extend(packet.data);
 
-    let mut outgoing_packet: Vec<u8> = vec![];
-    write_varint(&mut outgoing_packet, data_buffer.len() as u32);
-    outgoing_packet.extend(data_buffer);
-
-    stream.write_all(&outgoing_packet).await?;
+    stream.write_all(&data_buffer).await?;
 
     Ok(())
 }

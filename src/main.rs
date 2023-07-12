@@ -1,12 +1,12 @@
+use packets::login::handle_login;
 use tokio::net::{TcpListener, TcpStream};
 
-mod packet;
-mod varint;
-mod status;
+mod utils;
+mod packets;
 
-use packet::read_packet;
-use varint::{read_varint_buf, read_varint_string_buf};
-use status::handle_status;
+use utils::packet::read_packet;
+use utils::varint::{read_varint_buf, read_varint_string_buf};
+use packets::status::handle_status;
 use tokio::io::Error;
 
 #[tokio::main()]
@@ -19,7 +19,10 @@ async fn main() {
         println!("New connection from {}", stream.peer_addr().unwrap());
 
         tokio::spawn(async move {
-            handle_client(stream).await.unwrap();
+            match handle_client(stream).await {
+                Ok(_) => {}
+                Err(_) => {}
+            };
         });
     }
 }
@@ -39,14 +42,11 @@ async fn handle_client(mut stream: TcpStream) -> Result<(), Error> {
                 1 => {
                     //why mojang
                     read_packet(&mut stream).await.unwrap();
-                    
+
                     handle_status(&mut stream).await?;
                 },
                 2 => {
-                    let mut packet = read_packet(&mut stream).await.unwrap();
-                    let username = read_varint_string_buf(&mut packet.data).unwrap();
-
-                    println!("{}", username);
+                    handle_login(&mut stream).await.unwrap();
                 }
                 _ => {
 

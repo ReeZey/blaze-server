@@ -80,10 +80,26 @@ pub fn write_varint(buffer: &mut Vec<u8>, mut number: u32) {
     }
 }
 
-pub fn varint_length(number: u32) -> u32 {
-    let mut buffer = vec![];
-    write_varint(&mut buffer, number);
-    return buffer.len() as u32;
+//TODO: better varint length check but this works for now
+// it might be a little bit performant but nobody has died
+// because of performance. right?
+pub fn varint_length(mut number: u32) -> u32 {
+    let mut length = 0;
+    loop {
+        number >>= 6;
+
+        let done = number == 0;
+
+        if !done {
+            number >>= 1;
+        }
+
+        length += 1;
+
+        if done {
+            return length;
+        };
+    }
 }
 
 pub fn write_varint_string(buffer: &mut Vec<u8>, string: String) {

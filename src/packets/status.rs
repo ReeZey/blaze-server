@@ -1,11 +1,10 @@
-use crate::varint;
-use crate::packet;
-use crate::varint::varint_length;
+use crate::utils::varint;
+use crate::utils::packet;
 
 use bson::{Document, Bson};
 use packet::{write_packet, read_packet, Packet};
+use varint::{write_varint_string, varint_length};
 use tokio::net::TcpStream;
-use varint::write_varint_string;
 use std::io::Error;
 
 pub async fn handle_status(mut stream: &mut TcpStream) -> Result<(), Error> {
