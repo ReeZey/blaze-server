@@ -11,6 +11,16 @@ pub struct Packet {
     pub data: Vec<u8>
 }
 
+impl Packet {
+    pub fn new(packet_id: u32, data: Vec<u8>) -> Packet {
+        return Packet {
+            length: varint_length(packet_id) + data.len() as u32,
+            packet_id,
+            data
+        }
+    }
+}
+
 pub async fn read_packet(mut stream: &mut TcpStream) -> Result<Packet, Error> {
     let length = read_varint(&mut stream).await?;
     let packet_id = read_varint(&mut stream).await?;
