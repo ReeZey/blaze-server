@@ -5,7 +5,7 @@ use crate::utils::player;
 
 use bson::{Document, Bson};
 use packet::{write_packet, read_packet, Packet};
-use varint::{write_varint_string, varint_length};
+use varint::write_varint_string;
 use tokio::net::TcpStream;
 use std::collections::HashMap;
 use std::io::Error;
@@ -46,10 +46,7 @@ pub async fn handle_status(mut stream: &mut TcpStream, players: Arc<Mutex<HashMa
 
     let mut output_buffer = vec![];
     write_varint_string(&mut output_buffer, bson_min_broder.into_relaxed_extjson().to_string());
-
-    let packet_id = 0;
-
-    write_packet(&mut stream, Packet::new(packet_id, output_buffer)).await?;
+    write_packet(&mut stream, Packet::new(0, output_buffer)).await?;
 
     let packet = read_packet(&mut stream).await?;
     write_packet(&mut stream, packet).await?;

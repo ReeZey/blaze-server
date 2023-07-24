@@ -104,5 +104,5 @@ pub fn varint_length(mut number: u32) -> u32 {
 
 pub fn write_varint_string(buffer: &mut Vec<u8>, string: String) {
     write_varint(buffer, string.len() as u32);
-    buffer.extend_from_slice(String::into_bytes(string).as_slice())
+    buffer.extend(string.as_bytes());
 }

@@ -1,5 +1,4 @@
 use std::io::Error;
-use std::io::ErrorKind;
 use std::sync::Arc;
 
 use crate::utils::packet::Packet;
@@ -29,7 +28,8 @@ pub async fn handle_login(stream: &mut TcpStream, players: Arc<Mutex<HashMap<Str
     
     let mut players = players.lock().await;
 
-    if players.contains_key(&username){
+        
+    if players.contains_key(&username) && false {
         let mut response: Document = Document::default();
         response.insert("text", "du får inte vara med");
         response.insert("bold", true);
@@ -40,7 +40,8 @@ pub async fn handle_login(stream: &mut TcpStream, players: Arc<Mutex<HashMap<Str
         write_varint_string(&mut output_buffer, bson_min_broder.into_relaxed_extjson().to_string());
     
         write_packet(stream, Packet::new(0, output_buffer)).await?;
-        return Err(Error::new(ErrorKind::Other, "Player already connected"));
+        println!("{} is already playing", username);
+        return Ok(());
     }
 
     println!("New player authenticated: {} {:x?}", username, guid);
@@ -51,12 +52,12 @@ pub async fn handle_login(stream: &mut TcpStream, players: Arc<Mutex<HashMap<Str
     //println!("{:#?}", players);
     drop(players);
 
-    let mut output_buffer = vec![];
-    output_buffer.extend(guid.to_be_bytes());
-    output_buffer.extend(username.as_bytes());
-    write_varint(&mut output_buffer, 0);
+    let mut buffer = vec![];
+    buffer.extend(guid.to_be_bytes());
+    write_varint_string(&mut buffer, username);
+    write_varint(&mut buffer, 0);
 
-    write_packet(stream, Packet::new(2, output_buffer)).await?;
+    write_packet(stream, Packet::new(2, buffer)).await?;
 
     Ok(())
 }

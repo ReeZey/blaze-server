@@ -1,8 +1,8 @@
 use std::collections::HashMap;
-use std::io::ErrorKind;
 use std::sync::Arc;
 
-use packets::login::handle_login;
+use packets::play::login_play;
+use packets::{status, login_success};
 use tokio::net::{TcpListener, TcpStream};
 
 mod utils;
@@ -11,7 +11,6 @@ mod packets;
 use tokio::sync::Mutex;
 use utils::packet::read_packet;
 use utils::varint::{read_varint_buf, read_varint_string_buf};
-use packets::status::handle_status;
 use tokio::io::Error;
 use utils::player::Player;
 
@@ -52,19 +51,15 @@ async fn handle_client(mut stream: TcpStream, players: Arc<Mutex<HashMap<String,
                     //why mojang
                     read_packet(&mut stream).await.unwrap();
 
-                    handle_status(&mut stream, players).await?;
+                    status::handle_status(&mut stream, players).await?;
                 },
                 2 => {
-                    match handle_login(&mut stream, players).await {
-                        Ok(_) => {},
-                        Err(err) => {
-                            if err.kind() == ErrorKind::Other {
-                                return Ok(());
-                            }else {
-                                eprintln!("{:#?}", err);
-                            }
-                        }
-                    };
+                    login_success::handle_login(&mut stream, players).await.unwrap();
+                    login_play::handle_login(&mut stream).await.unwrap();
+                    
+                    loop {
+
+                    }
                 }
                 _ => {}
             }
